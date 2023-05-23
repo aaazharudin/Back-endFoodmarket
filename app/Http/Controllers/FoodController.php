@@ -18,10 +18,9 @@ class FoodController extends Controller
         $food = Food::paginate(10);
 
         return view('food.index', [
-            'food' => $food
+            'food' => $food,
         ]);
     }
-
 
     /**
      * Show the form for creating a new resource.
@@ -43,7 +42,9 @@ class FoodController extends Controller
     {
         $data = $request->all();
 
-        $data['picturePath'] = $request->file('picturePath')->store('assets/food', 'public');
+        $data['picturePath'] = $request
+            ->file('picturePath')
+            ->store('/storage/assets/food', 'public');
 
         Food::create($data);
 
@@ -69,8 +70,8 @@ class FoodController extends Controller
      */
     public function edit(Food $food)
     {
-        return view('food.edit',[
-            'item' => $food
+        return view('food.edit', [
+            'item' => $food,
         ]);
     }
 
@@ -85,9 +86,10 @@ class FoodController extends Controller
     {
         $data = $request->all();
 
-        if($request->file('picturePath'))
-        {
-            $data['picturePath'] = $request->file('picturePath')->store('assets/food', 'public');
+        if ($request->file('picturePath')) {
+            $data['picturePath'] = $request
+                ->file('picturePath')
+                ->store('/storage/assets/food', 'public');
         }
 
         $food->update($data);

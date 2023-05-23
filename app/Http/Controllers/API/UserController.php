@@ -23,36 +23,45 @@ class UserController extends Controller
             $request->validate([
                 'email' => 'email|required',
                 'password' => 'required',
-
             ]);
 
             //untukk check credential (login)
             $credentials = request(['email', 'password']);
             if (!Auth::attempt($credentials)) {
-                return ResponseFormatter::error([
-                    'message' => 'Unauthorized'
-                ], 'Authentication Failed', 500);
+                return ResponseFormatter::error(
+                    [
+                        'message' => 'Unauthorized',
+                    ],
+                    'Authentication Failed',
+                    500
+                );
             }
 
             // Jika hash tidak sesuai maka beri eror
             $user = User::Where('email', $request->email)->first();
-            if(!Hash::check($request->password, $user->password, [])) { 
+            if (!Hash::check($request->password, $user->password, [])) {
                 throw new \Exception('Invalid Credentials');
             }
 
             //jika berhasil maka loginkan
             $tokenResult = $user->createToken('authToken')->plainTextToken;
-            return ResponseFormatter::success([
-                'access_token' => $tokenResult,
-                'token_type' => 'Bearer',
-                'user' => $user
-            ], 'Authenticated');
-            
+            return ResponseFormatter::success(
+                [
+                    'access_token' => $tokenResult,
+                    'token_type' => 'Bearer',
+                    'user' => $user,
+                ],
+                'Authenticated'
+            );
         } catch (Exception $error) {
-            return ResponseFormatter::error([
-                'message' => 'something went wrong',
-                'error' => $error
-            ], 'Authentication Failed', 500);
+            return ResponseFormatter::error(
+                [
+                    'message' => 'something went wrong',
+                    'error' => $error,
+                ],
+                'Authentication Failed',
+                500
+            );
         }
     }
 
@@ -62,8 +71,14 @@ class UserController extends Controller
             //validasi input data register
             $request->validate([
                 'name' => ['required', 'string', 'max:255'],
-                'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-                'password' => $this->passwordRules()
+                'email' => [
+                    'required',
+                    'string',
+                    'email',
+                    'max:255',
+                    'unique:users',
+                ],
+                'password' => $this->passwordRules(),
             ]);
 
             User::create([
@@ -73,7 +88,7 @@ class UserController extends Controller
                 'houseNumber' => $request->houseNumber,
                 'phoneNumber' => $request->phoneNumber,
                 'city' => $request->city,
-                'password' => Hash::make($request->password)
+                'password' => Hash::make($request->password),
             ]);
 
             $user = User::where('email', $request->email)->first();
@@ -83,21 +98,26 @@ class UserController extends Controller
             return ResponseFormatter::success([
                 'access_token' => $tokenResult,
                 'token_type' => 'Bearer',
-                'user' => $user
-
+                'user' => $user,
             ]);
-            
-        }catch (Exception $error){
-            return ResponseFormatter::error([
-                'message' => 'something went wrong',
-                'error' => $error
-            ], 'Authentication Failed', 500);
+        } catch (Exception $error) {
+            return ResponseFormatter::error(
+                [
+                    'message' => 'something went wrong',
+                    'error' => $error,
+                ],
+                'Authentication Failed',
+                500
+            );
         }
     }
 
     public function logout(Request $request)
     {
-        $token = $request->user()->currentAccessToken()->delete();
+        $token = $request
+            ->user()
+            ->currentAccessToken()
+            ->delete();
 
         return ResponseFormatter::success($token, 'Token Revoked');
     }
@@ -105,7 +125,9 @@ class UserController extends Controller
     public function fetch(Request $request)
     {
         return ResponseFormatter::success(
-            $request->user(),'Data Profile user berhasil diambil');
+            $request->user(),
+            'Data Profile user berhasil diambil'
+        );
     }
 
     public function updateProfile(Request $request)
@@ -115,7 +137,6 @@ class UserController extends Controller
         $user->update($data);
 
         return ResponseFormatter::success($user, 'Profile Update');
-
     }
 
     public function updatePhoto(Request $request)
@@ -126,26 +147,24 @@ class UserController extends Controller
 
         if ($validator->fails()) {
             return ResponseFormatter::error(
-                ['error'=>$validator->errors()], 
-                'Update Photo Fails', 
+                ['error' => $validator->errors()],
+                'Update Photo Fails',
                 401
             );
         }
 
-        if ($request->file('file')) 
-        {
-
+        if ($request->file('file')) {
             $file = $request->file->store('assets/user', 'public');
 
             //simpan foto ke database
             $user = Auth::user();
             $user->profile_photo_path = $file;
             $user->update();
-            
 
-
-            return ResponseFormatter::success([$file],'File successfully uploaded');
+            return ResponseFormatter::success(
+                [$file],
+                'File successfully uploaded'
+            );
         }
     }
-
 }

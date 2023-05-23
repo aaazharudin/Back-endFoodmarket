@@ -11,6 +11,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Jetstream\HasTeams;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable
 {
@@ -27,8 +28,15 @@ class User extends Authenticatable
      * @var string[]
      */
     protected $fillable = [
-        'name', 'email', 'password', 'profile_photo_path',
-        'address', 'houseNumber','phoneNumber', 'city','roles'
+        'name',
+        'email',
+        'password',
+        'address',
+        'houseNumber',
+        'phoneNumber',
+        'city',
+        'roles',
+        'profile_photo_path',
     ];
 
     /**
@@ -57,18 +65,19 @@ class User extends Authenticatable
      *
      * @var array
      */
-    protected $appends = [
-        'profile_photo_url',
-    ];
+    protected $appends = ['profile_photo_url'];
 
-    public function getCreatedAtAttribute($value)
+    public function getCreatedAtAttribute($created_at)
     {
-        return Carbon::parse($value)->timestamp;
+        return Carbon::parse($created_at)->getPreciseTimestamp(3);
     }
-
-    public function getUpdatedAtAttribute($value)
+    public function getUpdatedAtAttribute($updated_at)
     {
-        return Carbon::parse($value)->timestamp;
+        return Carbon::parse($updated_at)->getPreciseTimestamp(3);
     }
-
+    public function getProfilePhotoUrlAttribute()
+    {
+        return config('app.url') .
+            Storage::url($this->attributes['profile_photo_path']);
+    }
 }
